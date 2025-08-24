@@ -31,7 +31,15 @@ class GameBasics {
 
         this.setting = {
             updateSeconds: (1/60),
-
+            spaceshipSpeed: 200,
+            bulletSpeed: 130,
+            bulletMaxFrequency: 500,
+            ufoRows: 4,
+            ufoColumns: 8,
+            ufoSpeed: 35,
+            ufoSinkingValue: 30,
+            bombSpeed: 75,
+            bombFrequency: 0.05
         };
 
         this.positionContainer = [];
