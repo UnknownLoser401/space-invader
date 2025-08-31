@@ -91,6 +91,8 @@ class GameBasics {
 }
 
 const play = new GameBasics(canvas);
+play.sounds = new Sounds();
+play.sounds.init();
 play.start();
 
 window.addEventListener("keydown", function(e){

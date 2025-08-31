@@ -177,10 +177,36 @@ class InGamePosition{
                 }
             }
             if (collision){
+                play.sounds.playSound("ufoDeath");
                 this.ufos.splice(i, 1);
                 i--;
             }
-        } 
+        }
+        
+        for (let i = 0; i < this.bombs.length; i++){
+            let bomb = this.bombs[i];
+            let collision = false;
+            if (bomb.x + 2 >= (spaceship.x - spaceship.width / 2) && bomb.x - 2 <= (spaceship.x + spaceship.width / 2) && bomb.y + 6 >= (spaceship.y - spaceship.height / 2) && bomb.y <= (spaceship.y + spaceship.height / 2)){
+                collision = true;
+                console.log(collision);
+                this.bombs.splice(i, 1);
+                i--;
+                play.sounds.playSound("explosion");
+                play.goToPosition(new OpeningPosition());
+            }
+            
+        }
+
+        for (let i = 0; i < this.ufos.length; i++){
+            let ufo = this.ufos[i];
+            let collision = false;
+            if (ufo.x + ufo.width / 2 >= (spaceship.x - spaceship.width / 2) && ufo.x - ufo.width / 2 <= (spaceship.x + spaceship.width / 2) && ufo.y + ufo.height / 2 >= (spaceship.y - spaceship.height / 2) && ufo.y - ufo.height / 2 <= (spaceship.y + spaceship.height / 2)){
+                play.sounds.playSound("explosion");
+                play.goToPosition(new OpeningPosition());
+                return;
+            }
+        }
+            
     }
 
     shoot(){
@@ -188,6 +214,7 @@ class InGamePosition{
             this.object = new Objects();
             this.bullets.push(this.object.bullet(this.spaceship.x, this.spaceship.y - this.spaceship.height / 2, this.setting.bulletSpeed));
             this.lastBulletTime = (new Date()).getTime();
+            play.sounds.playSound("shot");
         }
     }
 }
