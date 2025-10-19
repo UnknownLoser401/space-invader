@@ -7,7 +7,11 @@ class InGamePosition{
         this.bullets = [];
         this.ufos = [];
         this.lastBulletTime = null;
+        this.lastShootTime = null;
+        this.lastWeaponTime = null;
         this.bombs = [];
+        this.skill_items = [];
+        this.skill_weapons = [];
     }
 
     entry(play){
@@ -53,7 +57,7 @@ class InGamePosition{
         // ctx.fillStyle = "#ff3322";
         // ctx.fillText("abcde", play.width / 2, play.height / 2);
         ctx.drawImage(this.spaceship_image, this.spaceship.x - (this.spaceship.width / 2), this.spaceship.y - (this.spaceship.height / 2));
-        ctx.fillstyle = "#ff0000";
+        ctx.fillStyle = "#ff0000";
         for (let i = 0; i < this.bullets.length; i++){
             let bullet = this.bullets[i];
             ctx.fillRect(bullet.x - 1, bullet.y - 6, 2, 6);
@@ -68,6 +72,69 @@ class InGamePosition{
         for (let i = 0; i < this.bombs.length; i++){
             let bomb = this.bombs[i];
             ctx.fillRect(bomb.x - 2, bomb.y - 6, 4, 6);
+        }
+
+        ctx.fillStyle = "#F0B623";
+        ctx.globalCompositeOperation = 'destination-over';
+        for (let i = 0; i < this.skill_items.length; i++){
+            let item = this.skill_items[i];
+            ctx.beginPath();
+            ctx.arc(item.x, item.y, 10, 0, 2 * Math.PI);
+            ctx.fill();
+            // ctx.fillRect(item.x - 2, item.y - 6, 4, 6);
+        }
+
+        ctx.font = "16px Comic Sans MS";
+        ctx.fillStyle = '#424242';
+        ctx.textAlign = "left";
+        ctx.fillText("Press S to switch sound effects ON/OFF. Sound:", play.playBoundaries.left, play.playBoundaries.bottom + 70);
+
+        let soundStatus = (play.sounds.muted) ? "OFF" : "ON";
+        ctx.fillStyle = (play.sounds.muted) ? "#FF0000" : "#0B6121";
+        ctx.fillText(soundStatus, play.playBoundaries.left + 375, play.playBoundaries.bottom + 70);
+        ctx.fillStyle = '#424242';
+        ctx.textAlign = "right";
+        ctx.fillText("Press P to pause", play.playBoundaries.right, play.playBoundaries.bottom + 70);
+
+        
+        ctx.textAlign = "center";
+        ctx.font = "bold 24px Comic Sans MS";
+        ctx.fillStyle = "#34ebc3";
+        ctx.fillText("Level", play.width / 4, play.playBoundaries.top - 75);
+        ctx.font = "bold 30px Comic Sans MS";
+        ctx.fillText(play.level, play.width / 4, play.playBoundaries.top - 25);
+
+        ctx.font = "bold 24px Comic Sans MS";
+        ctx.fillStyle = "#34ebc3";
+        ctx.fillText("Score", (play.width / 4)*3, play.playBoundaries.top - 75);
+        ctx.font = "bold 30px Comic Sans MS";
+        ctx.fillText(play.score, (play.width / 4)*3, play.playBoundaries.top - 25);
+
+        ctx.fillText("Skill Weapons:", (play.width / 4), play.playBoundaries.top + 50);
+        
+        let bomb_cleaner_number = 0
+        for (let i = 0 ; i < this.skill_weapons.length ; i++){
+            if (this.skill_weapons[i].type === "bomb_cleaner"){
+                bomb_cleaner_number += 1;
+            }
+        }
+        let weapon_text = "Bomb Cleaner:" + bomb_cleaner_number;
+        ctx.fillText(weapon_text, (play.width / 4), play.playBoundaries.top + 80);
+
+        ctx.textAlign = "center";
+        if (play.shields > 0){
+            ctx.fillStyle = "#BDBDBD";
+            ctx.font = "bold 24px Comic Sans MS";
+            ctx.fillText("Shields", play.width / 2, play.playBoundaries.top - 75);
+            ctx.font = "bold 30px Comic Sans MS";
+            ctx.fillText(play.shields, play.width / 2, play.playBoundaries.top - 25);
+        }
+        else{
+            ctx.fillStyle = "#ff4d4d";
+            ctx.font = "bold 24px Comic Sans MS";
+            ctx.fillText("WARNING", play.width / 2, play.playBoundaries.top - 75);
+            ctx.fillStyle = "#BDBDBD";
+            ctx.fillText("No Shields Left!", play.width / 2, play.playBoundaries.top - 25);
         }
     }
 
@@ -89,6 +156,32 @@ class InGamePosition{
 
         if (play.pressedKeys["Space"]){
             this.shoot();
+        }
+
+        // if (play.pressedKeys["KeyD"]){
+        //     console.log("keyD is pressed.")
+        //     this.item_creation();
+        // }
+
+        let randomNumber = Math.floor(Math.random() * 10000);
+        if (randomNumber >= 9900){
+            this.item_creation();
+        }
+
+        if (play.pressedKeys["Digit1"]){
+            if (this.lastWeaponTime === null || (new Date()).getTime() - this.lastWeaponTime > this.setting.weaponMinFrequency){
+                console.log("Digit1 is pressed.")
+                this.lastWeaponTime = (new Date()).getTime();
+                for (let i = 0; i < this.skill_weapons.length; i++){
+                    let weapon = this.skill_weapons[i];
+                    if (weapon.type === "bomb_cleaner"){
+                        console.log("bombcleaner");
+                        this.bomb_cleaner();
+                        this.skill_weapons.pop();
+                        break;
+                    }
+                }
+            }
         }
 
         if (spaceship.x > (play.playBoundaries.right)){
@@ -161,8 +254,32 @@ class InGamePosition{
                 this.bombs.splice(i, 1);
                 i--;
             };
-            
         }
+            
+        for (let i = 0; i < this.skill_items.length; i++){
+            let item = this.skill_items[i];
+            item.y += upSec * this.setting.skill_item_speed;
+            // console.log(item.x);
+            // console.log(item.y);
+            if (item.y > play.height){
+                this.skill_items.splice(i, 1);
+                i--;
+            };
+        }
+
+        for (let i = 0; i < this.skill_items.length; i++){
+            let item = this.skill_items[i];
+            let item_collision = false;
+                if (item.x >= (spaceship.x - spaceship.width / 2) && item.x <= (spaceship.x + spaceship.width / 2) && item.y >= (spaceship.y - spaceship.height / 2) && item.y <= (spaceship.y + spaceship.height / 2)){
+                    console.log(item_collision);
+                    this.skill_items.splice(i, 1);
+                    item_collision = true;
+                }
+                if (item_collision === true){
+                    this.skill_weapons.push(this.object.skill_weapons("bomb_cleaner"));
+                    console.log(this.skill_weapons);
+                }
+            }
 
         for (let i = 0; i < this.ufos.length; i++){
             let ufo = this.ufos[i];
@@ -179,6 +296,8 @@ class InGamePosition{
             if (collision){
                 play.sounds.playSound("ufoDeath");
                 this.ufos.splice(i, 1);
+                play.score = play.score + play.setting.pointsPerUfo;
+                console.log(play.score);
                 i--;
             }
         }
@@ -188,11 +307,18 @@ class InGamePosition{
             let collision = false;
             if (bomb.x + 2 >= (spaceship.x - spaceship.width / 2) && bomb.x - 2 <= (spaceship.x + spaceship.width / 2) && bomb.y + 6 >= (spaceship.y - spaceship.height / 2) && bomb.y <= (spaceship.y + spaceship.height / 2)){
                 collision = true;
-                console.log(collision);
-                this.bombs.splice(i, 1);
-                i--;
-                play.sounds.playSound("explosion");
-                play.goToPosition(new OpeningPosition());
+                if (play.shields != 0){
+                    play.shields -= 1;
+                    this.bombs.splice(i, 1);
+                    i--;
+                    play.sounds.playSound("explosion");
+                }
+                else if(play.shields == 0){
+                    this.bombs.splice(i, 1);
+                    i--;
+                    play.sounds.playSound("explosion");
+                    play.goToPosition(new GameOverPosition());
+                }
             }
             
         }
@@ -202,12 +328,22 @@ class InGamePosition{
             let collision = false;
             if (ufo.x + ufo.width / 2 >= (spaceship.x - spaceship.width / 2) && ufo.x - ufo.width / 2 <= (spaceship.x + spaceship.width / 2) && ufo.y + ufo.height / 2 >= (spaceship.y - spaceship.height / 2) && ufo.y - ufo.height / 2 <= (spaceship.y + spaceship.height / 2)){
                 play.sounds.playSound("explosion");
-                play.goToPosition(new OpeningPosition());
+                play.goToPosition(new GameOverPosition());
+                play.shields = -1;
                 return;
             }
         }
-            
+        
+        if (this.ufos.length == 0){
+            play.level += 1;
+            play.goToPosition(new TransferPosition(play.level));
+        }
+
+        if (play.sheilds < 0){
+            play.goToPosition(new GameOverPosition());
+        }
     }
+
 
     shoot(){
         if (this.lastBulletTime === null || (new Date()).getTime() - this.lastBulletTime > this.setting.bulletMaxFrequency){
@@ -215,6 +351,29 @@ class InGamePosition{
             this.bullets.push(this.object.bullet(this.spaceship.x, this.spaceship.y - this.spaceship.height / 2, this.setting.bulletSpeed));
             this.lastBulletTime = (new Date()).getTime();
             play.sounds.playSound("shot");
+        }
+    }
+
+    item_creation(){
+        if (this.lastShootTime === null || (new Date()).getTime() - this.lastShootTime > this.setting.skillMinFrequency){
+            console.log("item creastion");
+            this.object = new Objects();
+            this.skill_items.push(this.object.bomb_cleaner(Math.floor(Math.random() * 700) + 100, 0, this.setting.skill_item_speed));
+            this.lastShootTime = (new Date()).getTime();
+        }
+    }
+
+    bomb_cleaner(){
+        this.bombs.length = 0;
+        console.log(this.bombs);
+    }
+
+    keyDown(play, keyboardCode){
+        if (keyboardCode == "KeyS"){
+            play.sounds.muteSwitch();
+        }
+        else if (keyboardCode == "KeyP"){
+            play.pushPosition(new PausePosition());
         }
     }
 }

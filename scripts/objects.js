@@ -36,4 +36,15 @@ class Objects{
         this.y = y;
         return this;
     }
+
+    bomb_cleaner(x, y){
+        this.x = x;
+        this.y = y;
+        return this;
+    }
+
+    skill_weapons(type){
+        this.type = type;
+        return this;
+    }
 }

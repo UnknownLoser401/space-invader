@@ -28,18 +28,24 @@ class GameBasics {
         this.level = 1;
         this.score = 0;
         this.shields = 2;
+        this.skills = 4;
 
         this.setting = {
             updateSeconds: (1/60),
             spaceshipSpeed: 200,
             bulletSpeed: 130,
             bulletMaxFrequency: 500,
+            // skillMinFrequency: (Math.random() * 10) + 10,
+            skillMinFrequency: 5000,
+            weaponMinFrequency: 5000,
             ufoRows: 4,
             ufoColumns: 8,
             ufoSpeed: 35,
             ufoSinkingValue: 30,
             bombSpeed: 75,
-            bombFrequency: 0.05
+            skill_item_speed: 50,
+            bombFrequency: 0.05,
+            pointsPerUfo: 25,
         };
 
         this.positionContainer = [];

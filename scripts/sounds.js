@@ -1,6 +1,6 @@
 class Sounds{
     constructor(){
-
+        this.muted = false;
     }
 
     init(){
@@ -15,6 +15,9 @@ class Sounds{
     }
 
     playSound(soundName){
+        if (this.muted){
+            return;
+        }
         let soundNumber;
         switch (soundName){
             case "shot":
@@ -32,5 +35,9 @@ class Sounds{
         }
         this.allSounds[soundNumber].currentTime = 0;
         this.allSounds[soundNumber].play();
+    }
+
+    muteSwitch(){
+        this.muted = !this.muted;
     }
 }
